@@ -1,28 +1,42 @@
-import React, {useReducer} from 'react';
-import io from 'socket.io-client';
+import React, {useEffect, useReducer} from 'react';
+import socket from './socket';
 import AuthBlock from "./components/AuthBlock/AuthBlock";
 import styled from 'styled-components';
 import reducer from './reducer';
-import {IS_AUTH} from "./reducer";
+import {JOINED} from "./reducer";
+import Chat from "./components/Chat";
 
 function App() {
     const [state, dispatch] = useReducer(reducer, {
-        isAuth: false,
+        joined: false,
+        roomId: null,
+        userName: null
     });
 
-    const onLogin = () => {
+    const onLogin = (entriesData) => {
         dispatch({
-            type: IS_AUTH,
-            payload: true,
+            type: JOINED,
+            payload: entriesData,
+        });
+        // socket request to backend
+        socket.emit('ROOM: JOIN', entriesData);
+    };
+
+    useEffect(() => {
+        socket.on('ROOM: JOINED', (users) => {
+            console.log('Новый пользователь: ', users);
         })
-    }
+    }, [])
+
+    window.socket = socket;
 
     return (
     <StyledWrapper>
-        {!state.isAuth
-            && <AuthBlock
+        {!state.joined
+            ? <AuthBlock
                     onLogin={onLogin}
                 />
+            : <Chat />
         }
     </StyledWrapper>
   );
@@ -34,6 +48,10 @@ const StyledWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content:center;
+  
+  @media screen and (max-width: 768px) {
+    align-items: start;
+  }
 `;
 
 export default App;

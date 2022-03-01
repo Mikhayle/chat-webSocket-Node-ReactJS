@@ -12,12 +12,16 @@ const AuthBlock = ({ onLogin }) => {
         if (!roomId || !userName) {
             return alert('Неверные данные')
         }
+        const entriesData = {
+            roomId,
+            userName
+        }
         setIsLoading(prevState => !prevState)
         await axios.post('/rooms', {
             roomId,
             userName
         });
-        onLogin();
+        onLogin(entriesData);
     };
 
     return (

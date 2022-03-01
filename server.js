@@ -22,7 +22,7 @@ app.post('/rooms', (req, res) => {
         rooms.set(
             roomId,
             new Map([
-                ['user', new Map()],
+                ['users', new Map()],
                 ['messages', []],
             ])
         );
@@ -31,6 +31,17 @@ app.post('/rooms', (req, res) => {
 })
 
 io.on('connection', socket => {
+    socket.on('ROOM: JOIN', ({ roomId, userName }) => {
+        // connection to chat-room by roomId
+        socket.join(roomId);
+        //add user to chat-room to users list
+        rooms.get(roomId).get('users').set(socket.id, userName);
+        // get userName list in this chat-room
+        const users = [...rooms.get(roomId).get('users').values()];
+        // send message to users in this chat-room except by yourself
+        socket.broadcast.to(roomId).emit('ROOM: JOINED', users);
+    })
+
     console.log('User connected: ', socket.id);
 })
 
